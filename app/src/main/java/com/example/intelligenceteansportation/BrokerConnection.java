@@ -16,13 +16,13 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 public class BrokerConnection extends AppCompatActivity {
 
-    public static final String SUB_TOPIC = ""; // topic to subscribe to
+    public static final String SUB_TOPIC = "inTopic";
 
 
-    public static final String LOCALHOST = "192.168.68.117"; // Ip address of the local host
-    private static final String MQTT_SERVER = "tcp://192.168.68.117:1883";   // the server uses tcp protocol on the local host ip and listens to the port 1883
-    public static final String CLIENT_ID = "Android App";   // the app client ID name
-    public static final int QOS = 0;    // quality of service
+    public static final String LOCALHOST = "broker.hivemq.com";
+    private static final String MQTT_SERVER = "tcp://" + LOCALHOST+ ":1883";
+    public static final String CLIENT_ID = "Android App";
+    public static final int QOS = 0;
 
     private boolean isConnected = false;
     private MqttClient mqttClient;
@@ -45,7 +45,7 @@ public class BrokerConnection extends AppCompatActivity {
                     final String successfulConnection = "Connected to MQTT broker";
                     Log.i(CLIENT_ID, successfulConnection);
                     Toast.makeText(context, successfulConnection, Toast.LENGTH_LONG).show();
-
+                    mqttClient.subscribe(SUB_TOPIC, QOS, null);
                 }
 
                 @Override
@@ -66,9 +66,19 @@ public class BrokerConnection extends AppCompatActivity {
 
                 @Override
                 public void messageArrived(String topic, MqttMessage message) throws Exception {
+                    String payload = new String(message.getPayload());
+                    Log.d(CLIENT_ID, "Message received: " + payload);
+                    Toast.makeText(context, "Message received: " + payload, Toast.LENGTH_SHORT).show();
 
+                    if (topic.equals(SUB_TOPIC) || (connectionMessage != null)) {
+                        String messageMQTT = message.toString();
+                        connectionMessage.setText(messageMQTT);
+                        Log.i(CLIENT_ID, "Message" + messageMQTT);  // prints in the console
+                    } else {
+                        // prints in the console
+                        Log.i(CLIENT_ID, "[MQTT] Topic: " + topic + " | Message: " + message.toString());
+                    }
                 }
-
                 @Override
                 public void deliveryComplete(IMqttDeliveryToken token) {
                     Log.d(CLIENT_ID, "Message delivered");
@@ -86,4 +96,3 @@ public class BrokerConnection extends AppCompatActivity {
     }
 
 }
-
